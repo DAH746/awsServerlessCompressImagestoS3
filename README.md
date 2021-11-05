@@ -23,15 +23,15 @@ For the resizing function to work PIL is required. This was utilised within the
 project with the use of a lambda layer with the ARN "arn:aws:lambda:eu-west-2:770693421928:layer:Klayers-python38-Pillow:14".
 
 Dependency list:
-    - json
-    - boto3
-    - PIL
-    - io
-    - os
+    * json
+    * boto3
+    * PIL
+    * io
+    * os
     
 Current Issues:
-    - IAM policy for Lambda function to use S3 had to be created manually
+    * IAM policy for Lambda function to use S3 had to be created manually
     and attached via ARN in Terraform code.
-    - Timeout of Lambda function is set at 3 seconds and is not changed via the
+    * Timeout of Lambda function is set at 3 seconds and is not changed via the
     timeout function in the Lambda function block even though this is set to 15s. This means that after the lambda function is created, the timeout has to be changed maunally on the aws management console to 15 seconds.
     
