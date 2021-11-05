@@ -1,15 +1,14 @@
 # This file will compress the image that is uploaded
 import json
 import boto3 # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.get_object
-# from pil import Image # Imports pillow image resizing functions
+from PIL import Image # Imports pillow image resizing functions
+from io import BytesIO
 
 def lambda_handler (s3EventNotifcationAsJson, context):
     # event is expected to be the S3 bucket upload notification
     # https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html
     
     s3EventNotifcationData = s3EventNotifcationAsJson['Records'][0]
-    
-    print("ASJKHDKJLASDJHKASKJD")
     
     # print(s3EventNotifcationData)
     
@@ -19,8 +18,9 @@ def lambda_handler (s3EventNotifcationAsJson, context):
     
     ###TEST START
     bucketNameOfTheBucketTheImageWasUploadedTo = "source-image-bucket-5623"
+    destinationBucketForRefactoredImage = "refactored-image-bucket-5623"
     keyOfImageUploadedToS3 = 'aws_diagram.jpg'
-    print(bucketNameOfTheBucketTheImageWasUploadedTo)
+    # print(bucketNameOfTheBucketTheImageWasUploadedTo)
     ####TEST END
     
     objectRepresentingAnS3Bucket = boto3.client('s3')
@@ -33,29 +33,31 @@ def lambda_handler (s3EventNotifcationAsJson, context):
     
     print(imageRawAsStreamingBody)
     
-    # imageRaw = StreamingBody.read(imageRawAsStreamingBody)
+    imageRaw = BytesIO(imageRawAsStreamingBody.read())
     
-    # print(imageRaw)
-
+    imageRaw = Image.open(imageRaw)
+    
     print(imageRawAsDict['Body'].read())
-    
-    print("THIS IS THE END")
+
     
     #####
     # george: 
     
     # Image resizing
     
-    # image = Image.open(imageRaw)
-    # new_image = image.resize((400, 400))
-    # new_image.save()# NEW IMAGE NAME)
+    print(imageRaw)
+    
+    new_image = imageRaw.resize((400, 400))
+    
+    buffer= BytesIO()
+    new_image.save(buffer, 'JPEG')
+    buffer.seek(0)
+
+    
+    sent_data= objectRepresentingAnS3Bucket.put_object(Bucket=destinationBucketForRefactoredImage, Key=keyOfImageUploadedToS3, Body=buffer)
     
     
-    #####
-    
-    # s3_resource = boto3.resource('s3') # resource greyed out?
-    
-    # test = s3.object
+    print("REACHED END OF FILE")
     
     
     
@@ -91,7 +93,7 @@ def lambda_handler (s3EventNotifcationAsJson, context):
 #           "arn": "arn:aws:s3:::mybucket"
 #         },
 #         "object": {
-#           "key": "Happy%20Face.jpg",
+#           "key": "Happy_Face.jpg",
 #           "size": 1024,
 #           "versionId": "version",
 #           "eTag": "d41d8cd98f00b204e9800998ecf8427e",
