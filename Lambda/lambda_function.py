@@ -3,6 +3,7 @@ import json
 import boto3 # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.get_object
 from PIL import Image # Imports pillow image resizing functions
 from io import BytesIO
+import os
 
 def lambda_handler (s3EventNotifcationAsJson, context):
     # event is expected to be the S3 bucket upload notification
@@ -10,18 +11,11 @@ def lambda_handler (s3EventNotifcationAsJson, context):
     
     s3EventNotifcationData = s3EventNotifcationAsJson['Records'][0]
     
-    # print(s3EventNotifcationData)
-    
     keyOfImageUploadedToS3 = s3EventNotifcationData['s3']['object']['key']
     
     bucketNameOfTheBucketTheImageWasUploadedTo = s3EventNotifcationData['s3']['bucket']['name']
     
-    ###TEST START
-    bucketNameOfTheBucketTheImageWasUploadedTo = "source-image-bucket-5623"
     destinationBucketForRefactoredImage = "refactored-image-bucket-5623"
-    keyOfImageUploadedToS3 = 'aws_diagram.jpg'
-    # print(bucketNameOfTheBucketTheImageWasUploadedTo)
-    ####TEST END
     
     objectRepresentingAnS3Bucket = boto3.client('s3')
     
@@ -38,28 +32,43 @@ def lambda_handler (s3EventNotifcationAsJson, context):
     imageRaw = Image.open(imageRaw)
     
     print(imageRawAsDict['Body'].read())
-
-    
-    #####
-    # george: 
-    
-    # Image resizing
     
     print(imageRaw)
     
     new_image = imageRaw.resize((400, 400))
     
     buffer= BytesIO()
-    new_image.save(buffer, 'JPEG')
+    
+    # file extention stuff
+    fileNameSplit = keyOfImageUploadedToS3.split(".")
+    fileName = fileNameSplit[0]
+    fileExtention = fileNameSplit[1]
+    
+    if fileExtention.lower() == 'jpg' or 'jpeg':
+        fileExtentionOfImageToBePassedToConverter = 'JPEG'
+    elif fileExtention.lower() == 'png':
+        fileExtentionOfImageToBePassedToConverter = 'PNG'
+    else:
+        raise Exception("Extention is NOT a JPG/JPEG OR PNG")
+    # end - file extention stuff
+    
+    new_image.save(buffer, fileExtentionOfImageToBePassedToConverter)
     buffer.seek(0)
 
+    # Apply unique filename
+    uniqueVersionIDFromS3 = s3EventNotifcationData['s3']['object']['versionId']
     
-    sent_data= objectRepresentingAnS3Bucket.put_object(Bucket=destinationBucketForRefactoredImage, Key=keyOfImageUploadedToS3, Body=buffer)
+    rebuildFileName = ""
+    rebuildFileName += fileName# getting the filename without the extention
+    rebuildFileName += "_" # underscore to signify the next segment
+    rebuildFileName += uniqueVersionIDFromS3 # unique versionID from s3
+    rebuildFileName += "." + fileExtention # .jpg or .png from earlier
+    # End
+    
+    sent_data = objectRepresentingAnS3Bucket.put_object(Bucket=destinationBucketForRefactoredImage, Key=rebuildFileName, Body=buffer)
     
     
     print("REACHED END OF FILE")
-    
-    
     
     
 # ------------- Example JSON for S3 notification, passed in as the "event" param

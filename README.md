@@ -1,3 +1,23 @@
 # awsServerlessCompressImagestoS3
 
 <FILL LATER>
+
+This project uses serverless architecture to resize an image uploaded to an S3
+bucket.
+
+As seen in the basic architecture diagram, the service works by a lambda function
+being triggered by an S3 upload event. The lambda function then takes the file,
+resizes it to 400x400 and uploads the picture to a seperate S3 bucket for the
+resized images.
+
+The image is named by using the version ID when first uploaded and the name of
+the file uploaded. For example if the file name is picture.jpeg and the version 
+ID given is XXXX, the new file name for the resized image would be:
+picture_XXXX.jpeg
+
+
+The buckets and lambda function are created using terraform, which gives these
+services the correct permissions
+
+For the resizing function to work PIL is required.
+
