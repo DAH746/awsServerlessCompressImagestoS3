@@ -1,35 +1,54 @@
 # This file will compress the image that is uploaded
 import json
-import s3 # https://pypi.org/project/s3/
 import boto3 # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.get_object
-from PIL import Image # Imports pillow image resizing functions
+# from pil import Image # Imports pillow image resizing functions
 
-def lambda_handler (event, context):
+def lambda_handler (s3EventNotifcationAsJson, context):
     # event is expected to be the S3 bucket upload notification
     # https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html
     
-    s3EventNotifcationAsJson = event.json()
     s3EventNotifcationData = s3EventNotifcationAsJson['Records'][0]
     
-    keyOfImageUploadedToS3 = s3EventNotifcationData['object']['key']
+    print("ASJKHDKJLASDJHKASKJD")
+    
+    # print(s3EventNotifcationData)
+    
+    keyOfImageUploadedToS3 = s3EventNotifcationData['s3']['object']['key']
+    
     bucketNameOfTheBucketTheImageWasUploadedTo = s3EventNotifcationData['s3']['bucket']['name']
+    
+    ###TEST START
+    bucketNameOfTheBucketTheImageWasUploadedTo = "source-image-bucket-5623"
+    keyOfImageUploadedToS3 = 'aws_diagram.jpg'
+    print(bucketNameOfTheBucketTheImageWasUploadedTo)
+    ####TEST END
     
     objectRepresentingAnS3Bucket = boto3.client('s3')
     
-    imageRawAsDict = objectRepresentingAnS3Bucket.get_object(bucketNameOfTheBucketTheImageWasUploadedTo,keyOfImageUploadedToS3)
+    imageRawAsDict = objectRepresentingAnS3Bucket.get_object(Bucket = bucketNameOfTheBucketTheImageWasUploadedTo, Key = keyOfImageUploadedToS3)
     
-    imageRawAsStreamingBody = imageRawAsDict[0]['Body'] # default file form u'Body': <botocore.response.StreamingBody object at 0x00000000042EDAC8>
+    print(imageRawAsDict)
     
-    imageRaw = StreamingBody.read(imageRawAsStreamingBody) 
+    imageRawAsStreamingBody = imageRawAsDict['Body'] # default file form u'Body': <botocore.response.StreamingBody object at 0x00000000042EDAC8>
+    
+    print(imageRawAsStreamingBody)
+    
+    # imageRaw = StreamingBody.read(imageRawAsStreamingBody)
+    
+    # print(imageRaw)
+
+    print(imageRawAsDict['Body'].read())
+    
+    print("THIS IS THE END")
     
     #####
     # george: 
     
     # Image resizing
     
-    image = Image.open(imageRaw)
-    new_image = image.resize((400, 400))
-    new_image.save(# NEW IMAGE NAME)
+    # image = Image.open(imageRaw)
+    # new_image = image.resize((400, 400))
+    # new_image.save()# NEW IMAGE NAME)
     
     
     #####
