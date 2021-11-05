@@ -23,7 +23,7 @@ For the resizing function to work PIL is required. This was utilised within the
 project with the use of a lambda layer with the ARN "arn:aws:lambda:eu-west-2:770693421928:layer:Klayers-python38-Pillow:14".
 
 Dependency list:
-    * json
+* json
     * boto3
     * PIL
     * io
